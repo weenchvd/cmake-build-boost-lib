@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.2.0)
+project("CMakeBuildBoostLib"  VERSION 0.2.1)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 option(ENABLE_BOOST "Enable BOOST library" ON)
@@ -160,19 +160,39 @@ if(ENABLE_BOOST)
       elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
       message(${MES_PREF} "EXECUTE GNU")
       set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
+      # execute_process(
+      #   COMMAND           "bootstrap.bat" "gcc"
+      #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
+      #   COMMAND_ECHO      STDOUT
+      # )
+      # execute_process(
+      #   COMMAND           "b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
+      #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
+      #   COMMAND_ECHO      STDOUT
+      # )
+      # execute_process(
+      #   COMMAND           "${BOOST_LIB_B2_BUILD_DIR}/b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "toolset=gcc" "install"
+      #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+      #   COMMAND_ECHO      STDOUT
+      # )
       execute_process(
         COMMAND           "bootstrap.bat" "gcc"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
         COMMAND_ECHO      STDOUT
       )
       execute_process(
-        COMMAND           "b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
+        COMMAND           ".\\b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
         COMMAND_ECHO      STDOUT
       )
       execute_process(
-        COMMAND           "${BOOST_LIB_B2_BUILD_DIR}/b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "toolset=gcc" "install"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+        COMMAND           ".\\b2" "tools/bcp" #"toolset=gcc"
+        WORKING_DIRECTORY ${BOOST_LIB_B2_BUILD_DIR}
+        COMMAND_ECHO      STDOUT
+      )
+      execute_process(
+        COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" "circular_buffer" "chrono" "${BOOST_LIB_INSTALL_DIR}"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
         COMMAND_ECHO      STDOUT
       )
     endif()
