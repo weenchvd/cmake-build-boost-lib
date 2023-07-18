@@ -18,8 +18,8 @@
       }
     },
     {
-      "name": "gcc-x64-debug",
-      "displayName": "GCC x64 Debug",
+      "name": "windows-gcc-x64-debug",
+      "displayName": "Windows GCC x64 Debug",
       "inherits": "windows-base",
       "generator": "Ninja",
       "architecture": {
@@ -33,16 +33,16 @@
       }
     },
     {
-      "name": "gcc-x64-release",
-      "displayName": "GCC x64 Release",
-      "inherits": "gcc-x64-debug",
+      "name": "windows-gcc-x64-release",
+      "displayName": "Windows GCC x64 Release",
+      "inherits": "windows-gcc-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "msvc-x64-debug",
-      "displayName": "MSVC x64 Debug",
+      "name": "windows-msvc-x64-debug",
+      "displayName": "Windows MSVC x64 Debug",
       "inherits": "windows-base",
       "generator": "Ninja",
       "architecture": {
@@ -56,9 +56,45 @@
       }
     },
     {
-      "name": "msvc-x64-release",
-      "displayName": "MSVC x64 Release",
-      "inherits": "msvc-x64-debug",
+      "name": "windows-msvc-x64-release",
+      "displayName": "Windows MSVC x64 Release",
+      "inherits": "windows-msvc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+
+
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/.out/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-x64-debug",
+      "displayName": "Linux GCC x64 Debug",
+      "inherits": "linux-base",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "linux-gcc-x64-release",
+      "displayName": "Linux GCC x64 Release",
+      "inherits": "linux-gcc-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
@@ -66,24 +102,36 @@
   ],
   "buildPresets": [
     {
-      "name": "gcc-x64-debug",
-      "displayName": "GCC x64 Debug",
-      "configurePreset": "gcc-x64-debug"
+      "name": "windows-gcc-x64-debug",
+      "displayName": "Windows GCC x64 Debug",
+      "configurePreset": "windows-gcc-x64-debug"
     },
     {
-      "name": "gcc-x64-release",
-      "displayName": "GCC x64 Release",
-      "configurePreset": "gcc-x64-release"
+      "name": "windows-gcc-x64-release",
+      "displayName": "Windows GCC x64 Release",
+      "configurePreset": "windows-gcc-x64-release"
     },
     {
-      "name": "msvc-x64-debug",
-      "displayName": "MSVC x64 Debug",
-      "configurePreset": "msvc-x64-debug"
+      "name": "windows-msvc-x64-debug",
+      "displayName": "Windows MSVC x64 Debug",
+      "configurePreset": "windows-msvc-x64-debug"
     },
     {
-      "name": "msvc-x64-release",
-      "displayName": "MSVC x64 Release",
-      "configurePreset": "msvc-x64-release"
+      "name": "windows-msvc-x64-release",
+      "displayName": "Windows MSVC x64 Release",
+      "configurePreset": "windows-msvc-x64-release"
+    },
+
+
+    {
+      "name": "linux-gcc-x64-debug",
+      "displayName": "Linux GCC x64 Debug",
+      "configurePreset": "linux-gcc-x64-debug"
+    },
+    {
+      "name": "linux-gcc-x64-release",
+      "displayName": "Linux GCC x64 Release",
+      "configurePreset": "linux-gcc-x64-release"
     }
   ]
 }

@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.4.2)
+project("CMakeBuildBoostLib"  VERSION 0.5.0)
 
 
 #**********************************************************************
@@ -85,20 +85,19 @@ if(${boost_POPULATED})
   list(LENGTH B2_EXE_PATH B2_EXE_PATH_LENGTH)
   if (B2_EXE_PATH_LENGTH EQUAL 0)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-      execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
-    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-      execute_process(
-        COMMAND           "bootstrap.bat" "gcc"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
+      set(EXECUTE_PROCESS_COMMAND ${VCVARSALL_FILE} "x64" "&&" ".\\bootstrap.bat" "msvc")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND WIN32)
+      set(EXECUTE_PROCESS_COMMAND ".\\bootstrap.bat" "gcc")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND LINUX)
+      set(EXECUTE_PROCESS_COMMAND "./bootstrap.sh" "gcc")
     endif()
+    execute_process(
+      COMMAND           ${EXECUTE_PROCESS_COMMAND}
+      WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+      COMMAND_ECHO      STDOUT
+    )
   else()
-    message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
+    message(${MES_PREF_INFO} "\"${B2_EXE_PATH}\" already exists")
   endif()
 
 
@@ -106,20 +105,19 @@ if(${boost_POPULATED})
   list(LENGTH BCP_EXE_PATH BCP_EXE_PATH_LENGTH)
   if (BCP_EXE_PATH_LENGTH EQUAL 0)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-      execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\b2" "tools/bcp"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
-    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-      execute_process(
-        COMMAND           ".\\b2" "tools/bcp" "toolset=gcc"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
+      set(EXECUTE_PROCESS_COMMAND ${VCVARSALL_FILE} "x64" "&&" ".\\b2" "tools/bcp" "toolset=msvc")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND WIN32)
+      set(EXECUTE_PROCESS_COMMAND ".\\b2" "tools/bcp" "toolset=gcc")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND LINUX)
+      set(EXECUTE_PROCESS_COMMAND "./b2" "tools/bcp" "toolset=gcc")
     endif()
+    execute_process(
+      COMMAND           ${EXECUTE_PROCESS_COMMAND}
+      WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+      COMMAND_ECHO      STDOUT
+    )
   else()
-    message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
+    message(${MES_PREF_INFO} "\"${BCP_EXE_PATH}\" already exists")
   endif()
 
 
@@ -134,8 +132,13 @@ if(${boost_POPULATED})
     file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
     file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
     file(WRITE "${BOOST_LIB_REPOS_MIN_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" "${BCP_MODULE_LIST_HASH_NEW}")
+    if(WIN32)
+      set(EXECUTE_PROCESS_COMMAND ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}")
+    elseif(LINUX)
+      set(EXECUTE_PROCESS_COMMAND "./bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}")
+    endif()
     execute_process(
-      COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
+      COMMAND           ${EXECUTE_PROCESS_COMMAND}
       WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
       COMMAND_ECHO      STDOUT
     )
@@ -153,40 +156,35 @@ if(${boost_POPULATED})
     file(MAKE_DIRECTORY ${BOOST_LIB_INSTALL_DIR})
     file(WRITE "${BOOST_LIB_INSTALL_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" "${BCP_MODULE_LIST_HASH_NEW}")
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-      execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
-        COMMAND_ECHO      STDOUT
-      )
-      execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
-        COMMAND_ECHO      STDOUT
-      )
-      execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
-        COMMAND_ECHO      STDOUT
-      )
-    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-      execute_process(
-        COMMAND           "bootstrap.bat" "gcc"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
-        COMMAND_ECHO      STDOUT
-      )
-      execute_process(
-        COMMAND           "bootstrap.bat" "gcc"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
-        COMMAND_ECHO      STDOUT
-      )
-      execute_process(
-        COMMAND           ".\\b2" "toolset=gcc" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
-        COMMAND_ECHO      STDOUT
-      )
+      set(EXECUTE_PROCESS_COMMAND_1 ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat" "msvc")
+      set(EXECUTE_PROCESS_COMMAND_2 ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat" "msvc")
+      set(EXECUTE_PROCESS_COMMAND_3 ${VCVARSALL_FILE} "x64" "&&" ".\\b2" "toolset=msvc" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND WIN32)
+      set(EXECUTE_PROCESS_COMMAND_1 ".\\bootstrap.bat" "gcc")
+      set(EXECUTE_PROCESS_COMMAND_2 ".\\bootstrap.bat" "gcc")
+      set(EXECUTE_PROCESS_COMMAND_3 ".\\b2" "toolset=gcc" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU AND LINUX)
+      set(EXECUTE_PROCESS_COMMAND_1 "./bootstrap.sh" "gcc")
+      set(EXECUTE_PROCESS_COMMAND_2 "./bootstrap.sh" "gcc")
+      set(EXECUTE_PROCESS_COMMAND_3 "./b2" "toolset=gcc" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install")
     endif()
+    execute_process(
+      COMMAND           ${EXECUTE_PROCESS_COMMAND_1}
+      WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
+      COMMAND_ECHO      STDOUT
+    )
+    execute_process(
+      COMMAND           ${EXECUTE_PROCESS_COMMAND_2}
+      WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+      COMMAND_ECHO      STDOUT
+    )
+    execute_process(
+      COMMAND           ${EXECUTE_PROCESS_COMMAND_3}
+      WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+      COMMAND_ECHO      STDOUT
+    )
   else()
-    message(${MES_PREF_INFO} "Boost libraries are installed")
+    message(${MES_PREF_INFO} "Boost libraries are already installed")
   endif()
 endif()
 
