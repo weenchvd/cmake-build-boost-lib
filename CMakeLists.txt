@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.3.0)
+project("CMakeBuildBoostLib"  VERSION 0.3.1)
 
 
 #**********************************************************************
@@ -70,9 +70,9 @@ set(BCP_MODULE_LIST_HASH_OLD "${BCP_MODULE_LIST_HASH}")
 string(COMPARE EQUAL "${BCP_MODULE_LIST_HASH_NEW}" "${BCP_MODULE_LIST_HASH_OLD}" BCP_MODULE_LIST_HASHES_ARE_EQUAL)
 if (NOT ${BCP_MODULE_LIST_HASHES_ARE_EQUAL})
   set(BCP_MODULE_LIST_HASH ${BCP_MODULE_LIST_HASH_NEW} CACHE STRING "" FORCE)
-  set(BCP_MODULE_LIST_HAS_CHANGED TRUE)
+  set(BCP_MODULE_LIST_HAS_CHANGES TRUE)
 else()
-  set(BCP_MODULE_LIST_HAS_CHANGED FALSE)
+  set(BCP_MODULE_LIST_HAS_CHANGES FALSE)
 endif()
 
 
@@ -122,7 +122,9 @@ if(${boost_POPULATED})
       message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
     endif()
 
-    if(${BCP_MODULE_LIST_HAS_CHANGED})
+    file(GLOB BOOST_LIB_REPOS_MIN_LIST "${BOOST_LIB_REPOS_MIN_DIR}/*")
+    list(LENGTH BOOST_LIB_REPOS_MIN_LIST BOOST_LIB_REPOS_MIN_LIST_LENGTH)
+    if(${BCP_MODULE_LIST_HAS_CHANGES} OR ${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
       file(MAKE_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}")
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
@@ -132,10 +134,10 @@ if(${boost_POPULATED})
     else()
       message(${MES_PREF_INFO} "bcp module-list has no changes")
     endif()
-      
+
     file(GLOB BOOST_LIB_INCLUDE_LIST "${BOOST_LIB_INCLUDE_DIR}/*")
     list(LENGTH BOOST_LIB_INCLUDE_LIST BOOST_LIB_INCLUDE_LIST_LENGTH)
-    if(${BCP_MODULE_LIST_HAS_CHANGED} OR ${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
+    if(${BCP_MODULE_LIST_HAS_CHANGES} OR ${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
