@@ -1,0 +1,88 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/.out/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "gcc-x64-debug",
+      "displayName": "GCC x64 Debug",
+      "inherits": "windows-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "gcc-x64-release",
+      "displayName": "GCC x64 Release",
+      "inherits": "gcc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "msvc-x64-debug",
+      "displayName": "MSVC x64 Debug",
+      "inherits": "windows-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "msvc-x64-release",
+      "displayName": "MSVC x64 Release",
+      "inherits": "msvc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-x64-debug",
+      "displayName": "GCC x64 Debug",
+      "configurePreset": "gcc-x64-debug"
+    },
+    {
+      "name": "gcc-x64-release",
+      "displayName": "GCC x64 Release",
+      "configurePreset": "gcc-x64-release"
+    },
+    {
+      "name": "msvc-x64-debug",
+      "displayName": "MSVC x64 Debug",
+      "configurePreset": "msvc-x64-debug"
+    },
+    {
+      "name": "msvc-x64-release",
+      "displayName": "MSVC x64 Release",
+      "configurePreset": "msvc-x64-release"
+    }
+  ]
+}
