@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.5.0)
+project("CMakeBuildBoostLib"  VERSION 0.5.1)
 
 
 #**********************************************************************
@@ -175,12 +175,12 @@ if(${boost_POPULATED})
     )
     execute_process(
       COMMAND           ${EXECUTE_PROCESS_COMMAND_2}
-      WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+      WORKING_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR}
       COMMAND_ECHO      STDOUT
     )
     execute_process(
       COMMAND           ${EXECUTE_PROCESS_COMMAND_3}
-      WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+      WORKING_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR}
       COMMAND_ECHO      STDOUT
     )
   else()
@@ -188,7 +188,10 @@ if(${boost_POPULATED})
   endif()
 endif()
 
-set(BOOST_INCLUDES "${BOOST_LIB_INCLUDE_DIR}/boost-1_81")
+set(BOOST_INCLUDES "${BOOST_LIB_INCLUDE_DIR}")
+if(WIN32)
+  string(APPEND BOOST_INCLUDES "/boost-1_81")
+endif()
 file(GLOB_RECURSE BOOST_LIBS "${BOOST_LIB_LIB_DIR}")
 
 #**********************************************************************
