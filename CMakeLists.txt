@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.3.2)
+project("CMakeBuildBoostLib"  VERSION 0.4.0)
 
 
 #**********************************************************************
@@ -132,7 +132,7 @@ if(${boost_POPULATED})
       file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
       file(REMOVE_RECURSE "${BOOST_LIB_ROOT_DIR}-install")
       execute_process(
-        COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
+        COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
         COMMAND_ECHO      STDOUT
       )
@@ -163,42 +163,106 @@ if(${boost_POPULATED})
     endif()
   elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     message(${MES_PREF_INFO} "Execute GNU")
-    set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
+    # set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
+    # # execute_process(
+    # #   COMMAND           "bootstrap.bat" "gcc"
+    # #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
+    # #   COMMAND_ECHO      STDOUT
+    # # )
+    # # execute_process(
+    # #   COMMAND           "b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
+    # #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
+    # #   COMMAND_ECHO      STDOUT
+    # # )
+    # # execute_process(
+    # #   COMMAND           "${BOOST_LIB_B2_BUILD_DIR}/b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "toolset=gcc" "install"
+    # #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+    # #   COMMAND_ECHO      STDOUT
+    # # )
     # execute_process(
     #   COMMAND           "bootstrap.bat" "gcc"
     #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
     #   COMMAND_ECHO      STDOUT
     # )
     # execute_process(
-    #   COMMAND           "b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
+    #   COMMAND           ".\\b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
     #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
     #   COMMAND_ECHO      STDOUT
     # )
     # execute_process(
-    #   COMMAND           "${BOOST_LIB_B2_BUILD_DIR}/b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "toolset=gcc" "install"
-    #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+    #   COMMAND           ".\\b2" "tools/bcp" #"toolset=gcc"
+    #   WORKING_DIRECTORY ${BOOST_LIB_B2_BUILD_DIR}
     #   COMMAND_ECHO      STDOUT
     # )
-    execute_process(
-      COMMAND           "bootstrap.bat" "gcc"
-      WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-      COMMAND_ECHO      STDOUT
-    )
-    execute_process(
-      COMMAND           ".\\b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
-      WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-      COMMAND_ECHO      STDOUT
-    )
-    execute_process(
-      COMMAND           ".\\b2" "tools/bcp" #"toolset=gcc"
-      WORKING_DIRECTORY ${BOOST_LIB_B2_BUILD_DIR}
-      COMMAND_ECHO      STDOUT
-    )
-    execute_process(
-      COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" "circular_buffer" "chrono" "${BOOST_LIB_INSTALL_DIR}"
-      WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
-      COMMAND_ECHO      STDOUT
-    )
+    # execute_process(
+    #   COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" "circular_buffer" "chrono" "${BOOST_LIB_INSTALL_DIR}"
+    #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
+    #   COMMAND_ECHO      STDOUT
+    # )
+
+    file(GLOB B2_EXE_PATH "${BOOST_LIB_REPOS_DIR}/b2*")
+    list(LENGTH B2_EXE_PATH B2_EXE_PATH_LENGTH)
+    if (B2_EXE_PATH_LENGTH EQUAL 0)
+      execute_process(
+        COMMAND           "bootstrap.bat" "gcc"
+        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+        COMMAND_ECHO      STDOUT
+      )
+    else()
+      message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
+    endif()
+
+    file(GLOB BCP_EXE_PATH "${BOOST_LIB_REPOS_DIR}/dist/bin/bcp*")
+    list(LENGTH BCP_EXE_PATH BCP_EXE_PATH_LENGTH)
+    if (BCP_EXE_PATH_LENGTH EQUAL 0)
+      execute_process(
+        COMMAND           ".\\b2" "tools/bcp" "toolset=gcc"
+        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+        COMMAND_ECHO      STDOUT
+      )
+    else()
+      message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
+    endif()
+
+    if(${BCP_MODULE_LIST_HAS_CHANGES})
+      file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
+    endif()
+
+    file(GLOB BOOST_LIB_REPOS_MIN_LIST "${BOOST_LIB_REPOS_MIN_DIR}/*")
+    list(LENGTH BOOST_LIB_REPOS_MIN_LIST BOOST_LIB_REPOS_MIN_LIST_LENGTH)
+    if(${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
+      file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
+      file(REMOVE_RECURSE "${BOOST_LIB_ROOT_DIR}-install")
+      execute_process(
+        COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
+        COMMAND_ECHO      STDOUT
+      )
+    else()
+      message(${MES_PREF_INFO} "bcp module-list has no changes")
+    endif()
+
+    file(GLOB BOOST_LIB_INCLUDE_LIST "${BOOST_LIB_INCLUDE_DIR}/*")
+    list(LENGTH BOOST_LIB_INCLUDE_LIST BOOST_LIB_INCLUDE_LIST_LENGTH)
+    if(${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
+      execute_process(
+        COMMAND           "bootstrap.bat" "gcc"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
+        COMMAND_ECHO      STDOUT
+      )
+      execute_process(
+        COMMAND           "bootstrap.bat" "gcc"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+        COMMAND_ECHO      STDOUT
+      )
+      execute_process(
+        COMMAND           ".\\b2" "toolset=gcc" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
+        COMMAND_ECHO      STDOUT
+      )
+    else()
+      message(${MES_PREF_INFO} "Boost libraries are installed")
+    endif()
   endif()
 endif()
 
