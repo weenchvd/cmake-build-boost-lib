@@ -6,11 +6,20 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project("CMakeBuildBoostLib"  VERSION 0.1.1)
+set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
+
+project("CMakeBuildBoostLib"  VERSION 0.2.0)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 option(ENABLE_BOOST "Enable BOOST library" ON)
 
+# if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+#   file(GLOB_RECURSE CL_EXE_LIST "C:/Program Files*/cl.exe")
+#   list(LENGTH CL_EXE_LIST CL_EXE_LIST_LENGTH)
+#   message("~~ [INFO] ~~ CL_EXE_LIST: ${CL_EXE_LIST}")
+#   # set(CMAKE_C_COMPILER "" CACHE STRING "" FORCE)
+#   # set(CMAKE_CXX_COMPILER "" CACHE STRING "" FORCE)
+# endif()
 
 
 set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/.external")
@@ -58,17 +67,13 @@ message(${MES_PREF} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
 message(${MES_PREF} "CMAKE_GENERATOR_TOOLSET: ${CMAKE_GENERATOR_TOOLSET}")
 file(GLOB_RECURSE VCVARSALL_LIST "C:/Program Files*/vcvarsall.bat")
 list(LENGTH VCVARSALL_LIST VCVARSALL_LIST_LENGTH)
-if(${VCVARSALL_LIST_LENGTH} EQUAL 1)
-  message(${MES_PREF} "VCVARSALL_LIST: ${VCVARSALL_LIST}")
-else()
-  message(FATAL_ERROR "\"vcvarsall.bat\" not found")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+  if(${VCVARSALL_LIST_LENGTH} EQUAL 1)
+    message(${MES_PREF} "VCVARSALL_LIST: ${VCVARSALL_LIST}")
+  else()
+    message(FATAL_ERROR "\"vcvarsall.bat\" not found")
+  endif()
 endif()
-
-# execute_process(
-#   COMMAND           ${VCVARSALL_LIST} "amd64"
-#   #WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-#   COMMAND_ECHO      STDOUT
-# )
 
 
 
@@ -133,7 +138,12 @@ if(ENABLE_BOOST)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     message(${MES_PREF} "EXECUTE MSVC")
       # execute_process(
-      #   COMMAND           ${VCVARSALL_LIST} "x64" "&&" "cl"
+      #   COMMAND           ${VCVARSALL_LIST} "x64" "&&" "bootstrap.bat"
+      #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+      #   COMMAND_ECHO      STDOUT
+      # )
+      # execute_process(
+      #   COMMAND           ${VCVARSALL_LIST} "x64" "&&" "b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
       #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
       #   COMMAND_ECHO      STDOUT
       # )
@@ -143,11 +153,11 @@ if(ENABLE_BOOST)
         COMMAND_ECHO      STDOUT
       )
       execute_process(
-        COMMAND           ${VCVARSALL_LIST} "x64" "&&" "b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
+        COMMAND           ${VCVARSALL_LIST} "x64" "&&" ".\\b2" "tools/bcp"
         WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
         COMMAND_ECHO      STDOUT
       )
-    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
+      elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
       message(${MES_PREF} "EXECUTE GNU")
       set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
       execute_process(
