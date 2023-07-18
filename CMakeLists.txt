@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.3.1)
+project("CMakeBuildBoostLib"  VERSION 0.3.2)
 
 
 #**********************************************************************
@@ -122,10 +122,15 @@ if(${boost_POPULATED})
       message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
     endif()
 
+    if(${BCP_MODULE_LIST_HAS_CHANGES})
+      file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
+    endif()
+
     file(GLOB BOOST_LIB_REPOS_MIN_LIST "${BOOST_LIB_REPOS_MIN_DIR}/*")
     list(LENGTH BOOST_LIB_REPOS_MIN_LIST BOOST_LIB_REPOS_MIN_LIST_LENGTH)
-    if(${BCP_MODULE_LIST_HAS_CHANGES} OR ${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
-      file(MAKE_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}")
+    if(${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
+      file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
+      file(REMOVE_RECURSE "${BOOST_LIB_ROOT_DIR}-install")
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
@@ -137,7 +142,7 @@ if(${boost_POPULATED})
 
     file(GLOB BOOST_LIB_INCLUDE_LIST "${BOOST_LIB_INCLUDE_DIR}/*")
     list(LENGTH BOOST_LIB_INCLUDE_LIST BOOST_LIB_INCLUDE_LIST_LENGTH)
-    if(${BCP_MODULE_LIST_HAS_CHANGES} OR ${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
+    if(${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
