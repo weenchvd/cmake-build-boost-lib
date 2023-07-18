@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.2.2)
+project("CMakeBuildBoostLib"  VERSION 0.2.3)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
@@ -67,31 +67,30 @@ endif()
 
 
 
-set(MES_PREF "~~ [INFO] ~~ ")
-
-message(${MES_PREF} "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
-message(${MES_PREF} "CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
-message(${MES_PREF} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
-message(${MES_PREF} "CMAKE_GENERATOR_TOOLSET: ${CMAKE_GENERATOR_TOOLSET}")
-file(GLOB_RECURSE VCVARSALL_LIST "C:/Program Files*/vcvarsall.bat")
-list(LENGTH VCVARSALL_LIST VCVARSALL_LIST_LENGTH)
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-  if(${VCVARSALL_LIST_LENGTH} EQUAL 1)
-    message(${MES_PREF} "VCVARSALL_LIST: ${VCVARSALL_LIST}")
-  else()
-    message(FATAL_ERROR "\"vcvarsall.bat\" not found")
-  endif()
-endif()
+message(${MES_PREF_VARS} "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+message(${MES_PREF_VARS} "CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
+message(${MES_PREF_VARS} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+message(${MES_PREF_VARS} "CMAKE_GENERATOR_TOOLSET: ${CMAKE_GENERATOR_TOOLSET}")
+# file(GLOB_RECURSE VCVARSALL_LIST "C:/Program Files*/vcvarsall.bat")
+# list(LENGTH VCVARSALL_LIST VCVARSALL_LIST_LENGTH)
+# if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+#   if(${VCVARSALL_LIST_LENGTH} EQUAL 1)
+#     message(${MES_PREF_VARS} "VCVARSALL_LIST: ${VCVARSALL_LIST}")
+#   else()
+#     message(FATAL_ERROR "\"vcvarsall.bat\" not found")
+#   endif()
+# endif()
 
 
 
 cmake_path(GET CMAKE_BINARY_DIR FILENAME CONFIG_NAME)
 
 # set paths
-set(BOOST_LIB_ROOT_DIR    "${EXTERNAL_PROJECTS_DIR}/boost")
-set(BOOST_LIB_REPOS_DIR   "${BOOST_LIB_ROOT_DIR}/repos")
-set(BOOST_LIB_BUILD_DIR   "${BOOST_LIB_ROOT_DIR}/build")
-set(BOOST_LIB_FCSTUFF_DIR "${BOOST_LIB_ROOT_DIR}/cmake-fetchcontent-stuff")
+set(BOOST_LIB_ROOT_DIR      "${EXTERNAL_PROJECTS_DIR}/boost")
+set(BOOST_LIB_REPOS_DIR     "${BOOST_LIB_ROOT_DIR}/repos")
+set(BOOST_LIB_REPOS_MIN_DIR "${BOOST_LIB_ROOT_DIR}/repos-minimal")
+set(BOOST_LIB_BUILD_DIR     "${BOOST_LIB_ROOT_DIR}/build")
+set(BOOST_LIB_FCSTUFF_DIR   "${BOOST_LIB_ROOT_DIR}/cmake-fetchcontent-stuff")
 if (CONFIG_NAME)
   set(BOOST_LIB_INSTALL_DIR "${BOOST_LIB_ROOT_DIR}-install/${CONFIG_NAME}")
 else()
@@ -121,29 +120,32 @@ list(APPEND BCP_MODULE_LIST "bootstrap.bat")
 list(APPEND BCP_MODULE_LIST "bootstrap.sh")
 list(APPEND BCP_MODULE_LIST "boostcpp.jam")
 list(APPEND BCP_MODULE_LIST "boost-build.jam")
-list(APPEND BCP_MODULE_LIST "config")
-list(APPEND BCP_MODULE_LIST "bimap")
+# list(APPEND BCP_MODULE_LIST "config")
+# list(APPEND BCP_MODULE_LIST "bimap")
 list(APPEND BCP_MODULE_LIST "circular_buffer")
+
 # list(LENGTH BCP_MODULE_LIST BCP_MODULE_LIST_LENGTH_NEW)
 # set(BCP_MODULE_LIST_LENGTH_OLD "${BCP_MODULE_LIST_LENGTH}")
 # if (NOT ${BCP_MODULE_LIST_LENGTH_NEW} STREQUAL ${BCP_MODULE_LIST_LENGTH_OLD})
 #   set(BCP_MODULE_LIST_LENGTH ${BCP_MODULE_LIST_LENGTH_NEW} CACHE STRING "" FORCE)
-#   set(REINSTALL_BOOST TRUE)
+#   set(BCP_MODULE_LIST_HAS_CHANGED TRUE)
 # else()
-#   set(REINSTALL_BOOST FALSE)
+#   set(BCP_MODULE_LIST_HAS_CHANGED FALSE)
 # endif()
-# message(${MES_PREF} "REINSTALL_BOOST: ${REINSTALL_BOOST}")
+# message(${MES_PREF} "BCP_MODULE_LIST_HAS_CHANGED: ${BCP_MODULE_LIST_HAS_CHANGED}")
+
 string(SHA256 BCP_MODULE_LIST_HASH_NEW "${BCP_MODULE_LIST}")
 set(BCP_MODULE_LIST_HASH_OLD "${BCP_MODULE_LIST_HASH}")
 string(COMPARE EQUAL "${BCP_MODULE_LIST_HASH_NEW}" "${BCP_MODULE_LIST_HASH_OLD}" BCP_MODULE_LIST_HASHES_ARE_EQUAL)
 if (NOT ${BCP_MODULE_LIST_HASHES_ARE_EQUAL})
   set(BCP_MODULE_LIST_HASH ${BCP_MODULE_LIST_HASH_NEW} CACHE STRING "" FORCE)
-  set(REINSTALL_BOOST TRUE)
+  set(BCP_MODULE_LIST_HAS_CHANGED TRUE)
 else()
-  set(REINSTALL_BOOST FALSE)
+  set(BCP_MODULE_LIST_HAS_CHANGED FALSE)
 endif()
-message(${MES_PREF} "REINSTALL_BOOST: ${REINSTALL_BOOST}")
-message(${MES_PREF} "BCP_MODULE_LIST_HASH: ${BCP_MODULE_LIST_HASH}")
+message(${MES_PREF_VARS} "BCP_MODULE_LIST_HAS_CHANGED: ${BCP_MODULE_LIST_HAS_CHANGED}")
+message(${MES_PREF_VARS} "BCP_MODULE_LIST_HASH: ${BCP_MODULE_LIST_HASH}")
+message(${MES_PREF_VARS} "BCP_MODULE_LIST: ${BCP_MODULE_LIST}")
 
 
 file(MAKE_DIRECTORY "${BOOST_LIB_INSTALL_DIR}")
@@ -166,16 +168,16 @@ if(NOT boost_POPULATED)
   FetchContent_Populate(boost)
 endif()
 
-message(${MES_PREF} "boost_POPULATED: ${boost_POPULATED}")
-message(${MES_PREF} "BOOST_LIB_LIST_LENGTH: ${BOOST_LIB_LIST_LENGTH}")
+message(${MES_PREF_VARS} "boost_POPULATED: ${boost_POPULATED}")
+message(${MES_PREF_VARS} "BOOST_LIB_LIST_LENGTH: ${BOOST_LIB_LIST_LENGTH}")
 # run build and installation
 # if(${boost_POPULATED} AND NOT ${BOOST_LIB_LIST_LENGTH})
 if(${boost_POPULATED})
-  message(${MES_PREF} "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
-  message(${MES_PREF} "BOOST_LIB_BUILD_OPTIONS: ${BOOST_LIB_BUILD_OPTIONS}")
-  message(${MES_PREF} "BOOST_LIB_BUILD_PROPERTIES: ${BOOST_LIB_BUILD_PROPERTIES}")
+  message(${MES_PREF_VARS} "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+  message(${MES_PREF_VARS} "BOOST_LIB_BUILD_OPTIONS: ${BOOST_LIB_BUILD_OPTIONS}")
+  message(${MES_PREF_VARS} "BOOST_LIB_BUILD_PROPERTIES: ${BOOST_LIB_BUILD_PROPERTIES}")
   if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    message(${MES_PREF} "EXECUTE MSVC")
+    message(${MES_PREF_INFO} "Execute MSVC")
     # execute_process(
     #   COMMAND           ${VCVARSALL_LIST} "x64" "&&" "bootstrap.bat"
     #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
@@ -196,7 +198,7 @@ if(${boost_POPULATED})
         COMMAND_ECHO      STDOUT
       )
     else()
-      message(${MES_PREF} "${B2_EXE_PATH} is exists")
+      message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
     endif()
 
     file(GLOB BCP_EXE_PATH "${BOOST_LIB_REPOS_DIR}/dist/bin/bcp*")
@@ -208,34 +210,34 @@ if(${boost_POPULATED})
         COMMAND_ECHO      STDOUT
       )
     else()
-      message(${MES_PREF} "${BCP_EXE_PATH} is exists")
+      message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
     endif()
 
-    if(${REINSTALL_BOOST})
-      file(MAKE_DIRECTORY "${BOOST_LIB_REPOS_DIR}-minimal")
+    if(${BCP_MODULE_LIST_HAS_CHANGED})
+      file(MAKE_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}")
       execute_process(
-        COMMAND           ${VCVARSALL_LIST} "x64" "&&" ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_DIR}-minimal"
+        COMMAND           ${VCVARSALL_LIST} "x64" "&&" ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
         COMMAND_ECHO      STDOUT
       )
       execute_process(
         COMMAND           ${VCVARSALL_LIST} "x64" "&&" "bootstrap.bat"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}-minimal/tools/build"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
         COMMAND_ECHO      STDOUT
       )
       execute_process(
         COMMAND           ${VCVARSALL_LIST} "x64" "&&" "bootstrap.bat"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}-minimal"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
         COMMAND_ECHO      STDOUT
       )
       execute_process(
         COMMAND           ${VCVARSALL_LIST} "x64" "&&" ".\\b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "install"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}-minimal"
+        WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
         COMMAND_ECHO      STDOUT
       )
     endif()
   elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-    message(${MES_PREF} "EXECUTE GNU")
+    message(${MES_PREF_INFO} "Execute GNU")
     set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
     # execute_process(
     #   COMMAND           "bootstrap.bat" "gcc"
@@ -276,6 +278,6 @@ if(${boost_POPULATED})
 endif()
 
 #**********************************************************************
-add_executable(hello "src/hello.cpp")
+add_executable(main "src/main.cpp")
 
-install(TARGETS hello DESTINATION "${EXEC__INSTALL_DIR}")
+install(TARGETS main DESTINATION "${EXEC__INSTALL_DIR}")
