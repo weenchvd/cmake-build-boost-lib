@@ -8,15 +8,13 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.4.1)
+project("CMakeBuildBoostLib"  VERSION 0.4.2)
 
 
 #**********************************************************************
 # set common paths
 set(EXTERNAL_PROJECTS_DIR   "${CMAKE_SOURCE_DIR}/.external")
-
-set(EXEC__BIN_DIR           "${CMAKE_BINARY_DIR}/src")
-set(EXEC__INSTALL_DIR       "${CMAKE_INSTALL_PREFIX}/EXEC")
+set(EXEC_INSTALL_DIR        "${CMAKE_INSTALL_PREFIX}/EXEC")
 
 #**********************************************************************
 # set paths
@@ -192,7 +190,16 @@ if(${boost_POPULATED})
   endif()
 endif()
 
+set(BOOST_INCLUDES "${BOOST_LIB_INCLUDE_DIR}/boost-1_81")
+file(GLOB_RECURSE BOOST_LIBS "${BOOST_LIB_LIB_DIR}")
+
 #**********************************************************************
 add_executable(main "src/main.cpp")
 
-install(TARGETS main DESTINATION "${EXEC__INSTALL_DIR}")
+target_include_directories(main PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}"
+                                PRIVATE "${BOOST_INCLUDES}"
+)
+
+target_link_libraries(main PRIVATE "${BOOST_LIBS}")
+
+install(TARGETS main DESTINATION "${EXEC_INSTALL_DIR}")
