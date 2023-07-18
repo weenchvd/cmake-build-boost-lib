@@ -8,16 +8,15 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_PROJECT_INCLUDE_BEFORE "CMakePre.cmake")
 
-project("CMakeBuildBoostLib"  VERSION 0.4.0)
+project("CMakeBuildBoostLib"  VERSION 0.4.1)
 
 
 #**********************************************************************
 # set common paths
-set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/.external")
+set(EXTERNAL_PROJECTS_DIR   "${CMAKE_SOURCE_DIR}/.external")
 
-set(EXEC__BIN_DIR "${CMAKE_BINARY_DIR}/src")
-set(EXEC__INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/EXEC")
-
+set(EXEC__BIN_DIR           "${CMAKE_BINARY_DIR}/src")
+set(EXEC__INSTALL_DIR       "${CMAKE_INSTALL_PREFIX}/EXEC")
 
 #**********************************************************************
 # set paths
@@ -33,9 +32,10 @@ else()
   set(BOOST_LIB_INSTALL_DIR "${BOOST_LIB_ROOT_DIR}-install")
 endif()
 
-set(BOOST_LIB_INCLUDE_DIR "${BOOST_LIB_INSTALL_DIR}/include")
-set(BOOST_LIB_LIB_DIR     "${BOOST_LIB_INSTALL_DIR}/lib")
+set(BOOST_LIB_INCLUDE_DIR   "${BOOST_LIB_INSTALL_DIR}/include")
+set(BOOST_LIB_LIB_DIR       "${BOOST_LIB_INSTALL_DIR}/lib")
 
+#**********************************************************************
 # set script options and commands for the build
 set(BOOST_LIB_BUILD_OPTIONS         "--includedir=${BOOST_LIB_INCLUDE_DIR}")
 list(APPEND BOOST_LIB_BUILD_OPTIONS "--libdir=${BOOST_LIB_LIB_DIR}")
@@ -64,18 +64,6 @@ list(APPEND BCP_MODULE_LIST "config")
 list(APPEND BCP_MODULE_LIST "circular_buffer")
 # ^^^ optional modules ^^^
 
-# check bcp module-list for changes
-string(SHA256 BCP_MODULE_LIST_HASH_NEW "${BCP_MODULE_LIST}")
-set(BCP_MODULE_LIST_HASH_OLD "${BCP_MODULE_LIST_HASH}")
-string(COMPARE EQUAL "${BCP_MODULE_LIST_HASH_NEW}" "${BCP_MODULE_LIST_HASH_OLD}" BCP_MODULE_LIST_HASHES_ARE_EQUAL)
-if (NOT ${BCP_MODULE_LIST_HASHES_ARE_EQUAL})
-  set(BCP_MODULE_LIST_HASH ${BCP_MODULE_LIST_HASH_NEW} CACHE STRING "" FORCE)
-  set(BCP_MODULE_LIST_HAS_CHANGES TRUE)
-else()
-  set(BCP_MODULE_LIST_HAS_CHANGES FALSE)
-endif()
-
-
 #**********************************************************************
 # download and unpack BOOST library
 include(FetchContent)
@@ -95,54 +83,78 @@ endif()
 
 # run build and installation
 if(${boost_POPULATED})
-  if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    message(${MES_PREF_INFO} "Execute MSVC")
-
-    file(GLOB B2_EXE_PATH "${BOOST_LIB_REPOS_DIR}/b2*")
-    list(LENGTH B2_EXE_PATH B2_EXE_PATH_LENGTH)
-    if (B2_EXE_PATH_LENGTH EQUAL 0)
+  file(GLOB B2_EXE_PATH "${BOOST_LIB_REPOS_DIR}/b2*")
+  list(LENGTH B2_EXE_PATH B2_EXE_PATH_LENGTH)
+  if (B2_EXE_PATH_LENGTH EQUAL 0)
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
         WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
         COMMAND_ECHO      STDOUT
       )
-    else()
-      message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
+      execute_process(
+        COMMAND           "bootstrap.bat" "gcc"
+        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
+        COMMAND_ECHO      STDOUT
+      )
     endif()
+  else()
+    message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
+  endif()
 
-    file(GLOB BCP_EXE_PATH "${BOOST_LIB_REPOS_DIR}/dist/bin/bcp*")
-    list(LENGTH BCP_EXE_PATH BCP_EXE_PATH_LENGTH)
-    if (BCP_EXE_PATH_LENGTH EQUAL 0)
+
+  file(GLOB BCP_EXE_PATH "${BOOST_LIB_REPOS_DIR}/dist/bin/bcp*")
+  list(LENGTH BCP_EXE_PATH BCP_EXE_PATH_LENGTH)
+  if (BCP_EXE_PATH_LENGTH EQUAL 0)
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" ".\\b2" "tools/bcp"
         WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
         COMMAND_ECHO      STDOUT
       )
-    else()
-      message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
-    endif()
-
-    if(${BCP_MODULE_LIST_HAS_CHANGES})
-      file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
-    endif()
-
-    file(GLOB BOOST_LIB_REPOS_MIN_LIST "${BOOST_LIB_REPOS_MIN_DIR}/*")
-    list(LENGTH BOOST_LIB_REPOS_MIN_LIST BOOST_LIB_REPOS_MIN_LIST_LENGTH)
-    if(${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
-      file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
-      file(REMOVE_RECURSE "${BOOST_LIB_ROOT_DIR}-install")
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
       execute_process(
-        COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
+        COMMAND           ".\\b2" "tools/bcp" "toolset=gcc"
+        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
         COMMAND_ECHO      STDOUT
       )
-    else()
-      message(${MES_PREF_INFO} "bcp module-list has no changes")
     endif()
+  else()
+    message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
+  endif()
 
-    file(GLOB BOOST_LIB_INCLUDE_LIST "${BOOST_LIB_INCLUDE_DIR}/*")
-    list(LENGTH BOOST_LIB_INCLUDE_LIST BOOST_LIB_INCLUDE_LIST_LENGTH)
-    if(${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
+
+  # check bcp module-list for changes
+  set(BCP_MODULE_LIST_HASH_FILENAME "bcp-module-list-hash")
+  string(SHA256 BCP_MODULE_LIST_HASH_NEW "${BCP_MODULE_LIST}")
+  file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
+  file(TOUCH "${BOOST_LIB_REPOS_MIN_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}")
+  file(READ "${BOOST_LIB_REPOS_MIN_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" BCP_MODULE_LIST_HASH_OLD)
+  string(COMPARE EQUAL "${BCP_MODULE_LIST_HASH_NEW}" "${BCP_MODULE_LIST_HASH_OLD}" BCP_MODULE_LIST_HASHES_ARE_EQUAL)
+  if (NOT ${BCP_MODULE_LIST_HASHES_ARE_EQUAL})
+    file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
+    file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
+    file(WRITE "${BOOST_LIB_REPOS_MIN_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" "${BCP_MODULE_LIST_HASH_NEW}")
+    execute_process(
+      COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
+      WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
+      COMMAND_ECHO      STDOUT
+    )
+  else()
+    message(${MES_PREF_INFO} "bcp module-list has no changes")
+  endif()
+
+
+  file(MAKE_DIRECTORY ${BOOST_LIB_INSTALL_DIR})
+  file(TOUCH "${BOOST_LIB_INSTALL_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}")
+  file(READ "${BOOST_LIB_INSTALL_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" BCP_MODULE_LIST_HASH_OLD)
+  string(COMPARE EQUAL "${BCP_MODULE_LIST_HASH_NEW}" "${BCP_MODULE_LIST_HASH_OLD}" BCP_MODULE_LIST_HASHES_ARE_EQUAL)
+  if(NOT ${BCP_MODULE_LIST_HASHES_ARE_EQUAL})
+    file(REMOVE_RECURSE ${BOOST_LIB_INSTALL_DIR})
+    file(MAKE_DIRECTORY ${BOOST_LIB_INSTALL_DIR})
+    file(WRITE "${BOOST_LIB_INSTALL_DIR}/${BCP_MODULE_LIST_HASH_FILENAME}" "${BCP_MODULE_LIST_HASH_NEW}")
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
       execute_process(
         COMMAND           ${VCVARSALL_FILE} "x64" "&&" "bootstrap.bat"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
@@ -158,93 +170,7 @@ if(${boost_POPULATED})
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
         COMMAND_ECHO      STDOUT
       )
-    else()
-      message(${MES_PREF_INFO} "Boost libraries are installed")
-    endif()
-  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-    message(${MES_PREF_INFO} "Execute GNU")
-    # set(BOOST_LIB_B2_BUILD_DIR "${BOOST_LIB_REPOS_DIR}/boost-build")
-    # # execute_process(
-    # #   COMMAND           "bootstrap.bat" "gcc"
-    # #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-    # #   COMMAND_ECHO      STDOUT
-    # # )
-    # # execute_process(
-    # #   COMMAND           "b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
-    # #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-    # #   COMMAND_ECHO      STDOUT
-    # # )
-    # # execute_process(
-    # #   COMMAND           "${BOOST_LIB_B2_BUILD_DIR}/b2" ${BOOST_LIB_BUILD_OPTIONS} ${BOOST_LIB_BUILD_PROPERTIES} "toolset=gcc" "install"
-    # #   WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-    # #   COMMAND_ECHO      STDOUT
-    # # )
-    # execute_process(
-    #   COMMAND           "bootstrap.bat" "gcc"
-    #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-    #   COMMAND_ECHO      STDOUT
-    # )
-    # execute_process(
-    #   COMMAND           ".\\b2" "--prefix=${BOOST_LIB_B2_BUILD_DIR}" "install"
-    #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/tools/build"
-    #   COMMAND_ECHO      STDOUT
-    # )
-    # execute_process(
-    #   COMMAND           ".\\b2" "tools/bcp" #"toolset=gcc"
-    #   WORKING_DIRECTORY ${BOOST_LIB_B2_BUILD_DIR}
-    #   COMMAND_ECHO      STDOUT
-    # )
-    # execute_process(
-    #   COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" "circular_buffer" "chrono" "${BOOST_LIB_INSTALL_DIR}"
-    #   WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
-    #   COMMAND_ECHO      STDOUT
-    # )
-
-    file(GLOB B2_EXE_PATH "${BOOST_LIB_REPOS_DIR}/b2*")
-    list(LENGTH B2_EXE_PATH B2_EXE_PATH_LENGTH)
-    if (B2_EXE_PATH_LENGTH EQUAL 0)
-      execute_process(
-        COMMAND           "bootstrap.bat" "gcc"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
-    else()
-      message(${MES_PREF_INFO} "${B2_EXE_PATH} is exists")
-    endif()
-
-    file(GLOB BCP_EXE_PATH "${BOOST_LIB_REPOS_DIR}/dist/bin/bcp*")
-    list(LENGTH BCP_EXE_PATH BCP_EXE_PATH_LENGTH)
-    if (BCP_EXE_PATH_LENGTH EQUAL 0)
-      execute_process(
-        COMMAND           ".\\b2" "tools/bcp" "toolset=gcc"
-        WORKING_DIRECTORY ${BOOST_LIB_REPOS_DIR}
-        COMMAND_ECHO      STDOUT
-      )
-    else()
-      message(${MES_PREF_INFO} "${BCP_EXE_PATH} is exists")
-    endif()
-
-    if(${BCP_MODULE_LIST_HAS_CHANGES})
-      file(REMOVE_RECURSE ${BOOST_LIB_REPOS_MIN_DIR})
-    endif()
-
-    file(GLOB BOOST_LIB_REPOS_MIN_LIST "${BOOST_LIB_REPOS_MIN_DIR}/*")
-    list(LENGTH BOOST_LIB_REPOS_MIN_LIST BOOST_LIB_REPOS_MIN_LIST_LENGTH)
-    if(${BOOST_LIB_REPOS_MIN_LIST_LENGTH} EQUAL 0)
-      file(MAKE_DIRECTORY ${BOOST_LIB_REPOS_MIN_DIR})
-      file(REMOVE_RECURSE "${BOOST_LIB_ROOT_DIR}-install")
-      execute_process(
-        COMMAND           ".\\bcp" "--boost=${BOOST_LIB_REPOS_DIR}" ${BCP_MODULE_LIST} "${BOOST_LIB_REPOS_MIN_DIR}"
-        WORKING_DIRECTORY "${BOOST_LIB_REPOS_DIR}/dist/bin"
-        COMMAND_ECHO      STDOUT
-      )
-    else()
-      message(${MES_PREF_INFO} "bcp module-list has no changes")
-    endif()
-
-    file(GLOB BOOST_LIB_INCLUDE_LIST "${BOOST_LIB_INCLUDE_DIR}/*")
-    list(LENGTH BOOST_LIB_INCLUDE_LIST BOOST_LIB_INCLUDE_LIST_LENGTH)
-    if(${BOOST_LIB_INCLUDE_LIST_LENGTH} EQUAL 0)
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
       execute_process(
         COMMAND           "bootstrap.bat" "gcc"
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}/tools/build"
@@ -260,9 +186,9 @@ if(${boost_POPULATED})
         WORKING_DIRECTORY "${BOOST_LIB_REPOS_MIN_DIR}"
         COMMAND_ECHO      STDOUT
       )
-    else()
-      message(${MES_PREF_INFO} "Boost libraries are installed")
     endif()
+  else()
+    message(${MES_PREF_INFO} "Boost libraries are installed")
   endif()
 endif()
 
