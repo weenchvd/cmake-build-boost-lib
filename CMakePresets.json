@@ -9,7 +9,6 @@
     {
       "name": "windows-base",
       "hidden": true,
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/.out/build/${presetName}",
       "installDir": "${sourceDir}/install/${presetName}",
       "condition": {
@@ -22,6 +21,7 @@
       "name": "gcc-x64-debug",
       "displayName": "GCC x64 Debug",
       "inherits": "windows-base",
+      "generator": "Ninja",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -44,6 +44,7 @@
       "name": "msvc-x64-debug",
       "displayName": "MSVC x64 Debug",
       "inherits": "windows-base",
+      "generator": "Ninja",
       "architecture": {
         "value": "x64",
         "strategy": "external"

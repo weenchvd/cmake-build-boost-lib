@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project("CMakeBuildBoostLib"  VERSION 0.1.0)
+project("CMakeBuildBoostLib"  VERSION 0.1.1)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 option(ENABLE_BOOST "Enable BOOST library" ON)
